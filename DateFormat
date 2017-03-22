@@ -1,0 +1,339 @@
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+public class UtilsFechas {
+   
+	private static  UtilsFechas instance;
+	private final static String FECHA_HHMM = "HH:mm";
+	private final static String FECHA_HHMMSS = "HH:mm:ss";
+	private final static String FECHA_ANYO = "yyyy";
+	private final static String FECHA_YYYYMMDD = "yyyyMMdd";
+	private final static String TODOS_DIGITOS = "[0-9]*";
+	private final static String SEPARADOR = "-";
+	private final static String SEPARADOR_HORA = ":";
+	private final static String CERO = "0";
+	
+    private UtilsFechas() { 
+    	
+    }
+
+    static public UtilsFechas getInstance() {
+        if (instance == null) {
+            instance = new UtilsFechas();
+        }
+        return instance;
+    }
+  
+    /**
+     * Toma un dato de tipo Date y devuelve un long con formato "yyyyMMdd"
+     * 
+     * @param Date date
+     * @return long fecha
+     */
+    public long convertDateToLong(Date date) {
+          Calendar cal = new GregorianCalendar();
+          cal.setTime(date);
+          String anio =String.valueOf(cal.get(Calendar.YEAR));
+          String mes = String.valueOf(cal.get(Calendar.MONTH)+1);
+          String dia = String.valueOf(cal.get(Calendar.DATE));
+          
+          String cadena = "";
+          
+          if (mes != null && mes.length() == 1) {
+              mes = CERO + mes;
+          }
+          if (dia != null && dia.length() == 1) {
+              dia = CERO + dia;
+          }
+          
+          cadena = anio + mes + dia;
+          
+          return Long.parseLong(cadena);
+    }
+    
+    /**
+     * Toma un long con formato yyyyMMdd y devuelve un Date 
+     * En caso de error en la conversión devuelve null
+     * 
+     * @param long fecha
+     * @return Date date
+     */
+    public static Date convertLongToDate(long fecha) { 
+        String anio ="";
+        String mes ="";
+        String dia ="";
+        Date date = null;
+        
+    	String cad = String.valueOf(fecha);
+    	if (cad.length() == 8) {
+    		anio = cad.substring(0, 4);
+    		mes = cad.substring(4, 6);
+    		dia = cad.substring(6, 8);			
+		}
+    	try {
+    		Calendar cal = new GregorianCalendar();
+    		cal.set(Integer.parseInt(anio), Integer.parseInt(mes)-1,Integer.parseInt(dia));
+    		date = new Date(cal.getTimeInMillis());    		
+    	} catch (Exception e) {
+    		e = new Exception("A ocurrido un Error al transformar el campo" + fecha + "al tipo java.util.Date" ,e);
+		}
+    	return date;
+    }
+
+    /**
+     * Toma un long con formato yyyyMMdd y devuelve un String "ddMMyy"
+     * 
+     * @param long l
+     * @return String fechafinal
+     */
+    public String convertLongToDiaMesAnyoCorto(long l) { 
+    	String fechafinal = "";
+    	String cadena = String.valueOf(l);
+    	
+    	if (cadena.length() == 8) {
+    		String anio =cadena.substring(2, 4);
+    		String mes = cadena.substring(4, 6);
+    		String dia = cadena.substring(6, 8);
+    		
+    		fechafinal = dia + mes + anio;			
+		}
+             
+        return fechafinal;
+    }
+
+    /**
+     * Convierte Fechas con formato númerico 'AAAAMMDD' a la cadena "mm-aaaa"
+	 *
+     * @param Number fecha
+     * @return String fechaFinal
+     */
+    public String convertStringToMesAnyo(String fecha) {
+		StringBuffer sb = new StringBuffer();
+		
+		if (fecha != null && fecha.trim().length() == 8) {
+		    sb.append(fecha.substring(4, 6))
+		      .append(SEPARADOR)
+		      .append(fecha.substring(0, 4));
+		} else {
+			sb.append(SEPARADOR);
+		}
+		return String.valueOf(sb);
+    }
+
+    /**
+    * Convierte a "dd-mm-aaaa"
+    * 
+    * Tipos de entrada validos: 
+    * Object con formato "YYYYMMDD" o java.sql.DATE
+    * 
+    * @param Object fecha
+    * @return String fechaFinal
+    */
+    public static String fechaToString(Object fecha) {
+    	String fechaFinal = "";
+    	if (fecha instanceof String) {
+    		fechaFinal = convertFecha((String)fecha);
+		} else if(fecha instanceof Date) {
+			fechaFinal = convertFecha(convertDateToString((Date)fecha, FECHA_YYYYMMDD));
+		}
+		return fechaFinal;
+    }
+    
+    /**
+     * Convierte un Date a un String siguiendo el patrón indicado
+     * 
+     * @param Date fecha
+     * @param String pattern
+     * @return String fechaFinal
+     */
+    public static String convertDateToString(Date fecha, String pattern) {
+    	String fechaFinal = "";
+    	if (fecha != null) {
+    		SimpleDateFormat formatter = new SimpleDateFormat(pattern);
+    		fechaFinal = formatter.format(fecha);
+    	}
+    	return fechaFinal;
+    }
+
+    /**
+     * Método que formatea la fecha a "dd-mm-aaaa"
+     * 
+     * @param String fecha
+     * @return String fechaFinal
+     */
+    public static String convertFecha(String fecha){
+    	String fechaFinal = "";
+    	if (String.valueOf(fecha).matches(TODOS_DIGITOS) && String.valueOf(fecha).trim().length() == 8) {
+    		StringBuffer fechaTMP = new StringBuffer();
+		    			 fechaTMP.append(String.valueOf(fecha).substring(6, 8))
+		    				 	 .append(SEPARADOR)
+		    					 .append(String.valueOf(fecha).substring(4, 6))
+		    					 .append(SEPARADOR)
+		    					 .append(String.valueOf(fecha).substring(0, 4));
+    		fechaFinal = String.valueOf(fechaTMP);
+    	}
+    	return fechaFinal;
+    }
+    
+    /**
+     * Toma un String y devuelve un String del tipo "hh:mm" de 00:00 a 23:59
+     * 
+     * @param Date fecha
+     * @return String hhmm
+     */
+    public static String getHorayMinutosString(String fecha) {
+    	String horaFinal = "0";
+    	if (String.valueOf(fecha).matches(TODOS_DIGITOS) && String.valueOf(fecha).trim().length() == 7) {
+    		StringBuffer horaTMP = new StringBuffer();
+		    			 horaTMP.append(String.valueOf(fecha).substring(0, 2))
+		    				 	 .append(SEPARADOR_HORA)
+		    					 .append(String.valueOf(fecha).substring(2, 4));
+    		horaFinal = String.valueOf(horaTMP);
+    	}
+    	return horaFinal;
+    }
+    
+    
+    /**
+     * Toma un Date y devuelve un String del tipo "hh:mm" de 00:00 a 23:59
+     * 
+     * @param Date fecha
+     * @return String hhmm
+     */
+    public String getHorayMinutos(Date fecha) {
+    	String hhmm = "";
+    	if (fecha != null) {
+    	    SimpleDateFormat formatter = new SimpleDateFormat(FECHA_HHMM);
+    	    hhmm = formatter.format(fecha);
+    	}
+    	return hhmm;
+    }
+    
+    public static String getHorayMinutosySegundos(Date fecha) {
+    	String hora = "";
+    	if (fecha != null) {
+    	    SimpleDateFormat formatter = new SimpleDateFormat(FECHA_HHMMSS);
+    	    hora = formatter.format(fecha);
+    	}
+    	return hora;
+    }
+
+    /**
+     * Devuelve un Integer con el anyo actual en la forma "yyyy"
+     * 
+     * @return Integer anyo
+     */
+    public Integer getAnyoActual() {
+    	SimpleDateFormat formatter = new SimpleDateFormat(FECHA_ANYO);
+    	String anyo = formatter.format(new Date());
+    	return stringToInteger(anyo);
+    }
+
+	/**
+	 * Devuelve un Integer, en caso de Error devuelve 0
+	 * 
+	 * @param String cadena
+	 * @return Integer numero
+	 */
+	private Integer stringToInteger (String cadena) {
+		Integer numero = new Integer(0);
+		try {
+			numero = Integer.parseInt(cadena);
+		} catch (NumberFormatException e) {
+			e = new NumberFormatException("Ha ocurrido un error al convertir la cadena: " + cadena +" a Integer");
+		}	
+		return numero;			
+	}
+	
+	public static Date stringToDate(String fecha){
+		try {
+			DateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
+			Date date = formato.parse(fecha);
+			return date;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static Date getDateFromString( String format, String data ) throws RuntimeException {
+        
+        Date date = null;
+        
+        try { 
+              if ( data != null && data.length() > 0 ) {
+                    SimpleDateFormat formatter = new SimpleDateFormat(format);       
+                    date = formatter.parse( data );
+              }
+        } catch (Exception ex) {           
+              throw new RuntimeException(ex);
+        }
+        
+        return date;
+  
+        }
+  
+	public static Number getNumberFromDate( String format, Date date ) throws RuntimeException {
+  
+      Number dateNumber = null;
+  
+      try { 
+            if ( date != null ) {
+                  SimpleDateFormat formatter = new SimpleDateFormat(format);
+  
+                  dateNumber = new Long( formatter.format( date ) );
+            }
+      } catch (Exception ex) {           
+            throw new RuntimeException(ex);
+      }           
+  
+      return dateNumber;
+  
+  }
+
+  public static String getStringFromDate( String format, Date date ) {
+  
+      String dataStr = null;
+  
+      try { 
+            if ( date != null ) {
+                  SimpleDateFormat formatter = new SimpleDateFormat(format);
+                  
+                  dataStr = formatter.format( date );
+            }
+      } catch (Exception ex) {           
+            throw new RuntimeException(ex);
+      }           
+  
+      return dataStr;
+  
+  }	
+  
+	 /**
+	  * 
+	  * @param fch
+	  * @param changer cantidad a sumar/restar
+	  * @param tipo 1=dias, 2=meses, 3=años
+	  * @return
+	  */
+	 public static Date fechaMasMenos(Date fch, int changer, int tipo){
+
+		    Calendar cal = new GregorianCalendar();
+		    cal.setTimeInMillis(fch.getTime());
+		    switch (tipo) {
+			    case 1:
+			    	cal.add(Calendar.DATE, changer); // -> añade (n) o resta (-n) los dias que se le dice.		    	
+			    	break;
+			    case 2:
+			    	cal.add(Calendar.MONTH, changer); // -> añade (n) o resta (-n) los meses que se le dice.	
+			    	break;
+			    case 3:
+			    	cal.add(Calendar.YEAR, changer); // -> añade (n) o resta (-n) los años que se le dice.
+			    	break;		    
+		    }		    
+		    return new Date(cal.getTimeInMillis());
+	}
+}
